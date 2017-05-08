@@ -17,6 +17,8 @@
 ## Задание №2
 Написать программу для вывода в текстовый файл содержимого `BSJB` блока ([`ECMA-335.pdf`](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-335.pdf) II.24 и [`PortablePdb-Metadata.md`](https://github.com/dotnet/corefx/blob/master/src/System.Reflection.Metadata/specs/PortablePdb-Metadata.md) целиком) в читаемом формате.
 
+**Внимание:** В стандарте не описано расширение, реальзованное в `CoreCLR`: присутствует дополнительный бит `EXTRA_DATA` (маска `0x40`) в поле `HeapSizes` ([`ECMA-335.pdf`](https://www.ecma-international.org/publications/files/ECMA-ST/ECMA-335.pdf) II.24.2.6), который сообщает, что после поля `Sorted` появляется дополнительные 4 байта. Значение этих байт можно игнорировать.
+
 Парсить и выводить данные из `#Blob` стрима метаданных не нужно. [Тестовые данные](/test_data/md) для задания находятся в репозитории.
 
 ## Задание №3
