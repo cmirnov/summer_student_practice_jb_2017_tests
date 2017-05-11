@@ -1,101 +1,20 @@
-#include <iostream>
-#include <experimental/filesystem>
-#include <string>
-#include <fstream>
-#include <regex>
-#include <iterator>
-#include <vector>
+#include "Solver.h"
 
-namespace fs = std::experimental::filesystem;
 
-class InvalidOption {
-  private:
-    std::string message;
+Solver::Solver(Input* in) {
+  input = in;
+}
 
-  public:
-    InvalidOption(std::string str) : message(str) {}
-    void showMessage() {
-      std::cout << "\"" << message << "\" is invalid message\n";
-    }
-};
+Solver::~Solver() {
+  delete input;
+}
 
-class Input {
-  private:
-    bool caseSensitive;
-    bool invert;
-    bool regexp;
-    bool recursive;
-    std::string pattern;
-    std::string path;
-
-  public:
-    Input(int argc, char *argv[]) {
-      caseSensitive = true;
-      invert = false;
-      regexp = false;
-      recursive = false;
-      for (int i = 1; i < argc - 2; ++i) {
-        if (!strcmp(argv[i], "-i")) {
-          caseSensitive = false;
-          continue;
-        }
-        if (!strcmp(argv[i], "-v")) {
-          invert = true;
-          continue;
-        }
-        if (!strcmp(argv[i], "-E")) {
-          regexp = true;
-          continue;
-        }
-        if (!strcmp(argv[i], "-R")) {
-          recursive = true;
-          continue;
-        }
-        throw(new InvalidOption(argv[i]));
-      }
-      for (int i = 0; argv[argc - 2][i]; ++i) {
-        pattern.push_back(argv[argc - 2][i]);
-      }
-      path = "./";
-      for (int i = 0; argv[argc - 1][i]; ++i) {
-        path.push_back(argv[argc - 1][i]);
-      }
-    }
-    std::string getPattern() {
-      return pattern;
-    }
-    std::string getPath() {
-      return path;
-    }
-    bool getRecursive() {
-      return recursive;
-    }
-    bool getRegexp() {
-      return regexp;
-    }
-};
-
-class Solver {
-  private:
-    Input* input;
-
-  public:
-    Solver(Input* input) : input(input) {}
-    void run();
-    void findByStr();
-    void findByRegexp();
-    bool check(std::string pattern, std::string str);
-    std::vector <int> pFunc(std::string pattern, std::string str);
-    void outputStr(const fs::directory_entry entry);
-    void outputRegexp(const fs::directory_entry entry);
-  };
-
-  void Solver::run() {
-    if (this->input->getRegexp()) {
-      this->findByRegexp();
-    } else {
-      this->findByStr();
-    }
+void Solver::run() {
+  if (this->input->getRegexp()) {
+    this->findByRegexp();
+  } else {
+    this->findByStr();
+  }
 }
 
 void Solver::findByStr() {
@@ -175,7 +94,7 @@ void Solver::outputStr(const fs::directory_entry entry) {
   std::ifstream in(entry.path().string());
   std::string s;
   while (std::getline(in, s)) {
-    if (this->check(this->input->getPattern(), s)) {
+    if (this->input->getInvert() ^ this->check(this->input->getPattern(), s)) {
       std::vector<int> pi = pFunc(this->input->getPattern(), s);
       int n = this->input->getPattern().length();
       for (int i = n + 1; i < pi.size() - n + 1; ++i) {
@@ -204,7 +123,7 @@ void Solver::outputRegexp(const fs::directory_entry entry) {
   std::smatch m;
   std::string s;
   while (std::getline(in, s)) {
-    if (std::regex_search(s, m, reg)) {
+    if (this->input->getInvert() ^ std::regex_search(s, m, reg)) {
       int idx = 0;
       int n = this->input->getPattern().length();
       for (int i = 0; i < s.length(); ++i) {
@@ -226,14 +145,3 @@ void Solver::outputRegexp(const fs::directory_entry entry) {
   }
 }
 
-int main(int argc, char *argv[]) {
-  try {
-    Input* input = new Input(argc, argv);
-    Solver* solver = new Solver(input);
-    solver->run();
-  }
-  catch(InvalidOption *e) {
-    e->showMessage();
-  }
-  return 0;
-}
