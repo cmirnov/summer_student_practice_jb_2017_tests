@@ -6,22 +6,22 @@
 #include <iterator>
 #include <vector>
 #include "Input.h"
+#include <mutex>
+#include <thread>
+#include "Support.h"
 
 namespace fs = std::experimental::filesystem;
 
 class Solver {
   private:
-    Input* input;
-
+    std::vector<std::vector<std::string>> output;
   public:
+    Input* input;
     Solver(Input* input);
     ~Solver();
     void run();
     void findByStr();
     void findByRegexp();
-    bool check(std::string pattern, std::string str);
-    std::vector <int> pFunc(std::string pattern, std::string str);
-    void outputStr(const fs::directory_entry entry);
-    void outputRegexp(const fs::directory_entry entry);
+    std::mutex lock;
 };
 
